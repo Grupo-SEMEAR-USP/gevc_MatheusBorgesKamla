@@ -11,12 +11,12 @@ void Ordena_Circulos(vector<Vec3f> &, vector<Vec3f> &);
 
 int main(int argc, char **argv)
 {
-    //VideoCapture capture(0);
+    
     //char* videoName = "painel2.mp4";
     char *imageName = argv[1];
-    //VideoCapture capture(videoName);
+    /*VideoCapture capture(videoName);
 
-    /*if(!capture.isOpened()) 
+    if(!capture.isOpened()) 
     { 
         cerr << " ERR: Unable find input Video source." << endl;
 		return -1;
@@ -39,17 +39,17 @@ int main(int argc, char **argv)
     namedWindow("Circulos Detectados", CV_WINDOW_NORMAL);
 
     int tot_pixels, found_pixels, point_aux;
-    int lum_circulos[6];
-    int leitura_painel[3];
-    int upper_threshold = 90;
+    int painel[3];
+    int max_threshold = 90;
 
     vector<Vec3f> circles, ord_circles;
-    float minimum_radius, maximum_radius;
+    float raio_min, raio_max;
     int pixel;
+    int luminosidade_circ[6];
 
-    //while(waitKey(33) != 27)
-    //{
-    //capture.read(src);
+    /*while(waitKey(33) != 27)
+    {
+    capture.read(src);*/
     src = imread(imageName, IMREAD_COLOR);
 
     if (src.empty())
@@ -66,13 +66,13 @@ int main(int argc, char **argv)
 
     //blur( imgGray, imgGray, Size(3,3) );
 
-    minimum_radius = 0.015 * src.rows;
+    raio_min = 0.015 * src.rows;
     //Defino que o raio mínimo a ser encontrado sera o 1.5% do número de linhas da imagem original
-    maximum_radius = 0.070 * src.rows;
+    raio_max = 0.070 * src.rows;
     //Defino que o raio máximo a ser encontrado sera ate 7% do número de linhas da imagem original
 
     /// Apply the Hough Transform to find the circles
-    HoughCircles(imgGray, circles, CV_HOUGH_GRADIENT, 1, imgGray.rows / 8, upper_threshold, 30, minimum_radius, maximum_radius);
+    HoughCircles(imgGray, circles, CV_HOUGH_GRADIENT, 1, imgGray.rows / 8, max_threshold, 30, raio_min, raio_max);
     /*Recebe como parâmetros: imagem que deve ser em grayscale na qual procurará os contornos /// vetor do tipo 3-element floating-point
         (x, y, radius) que guardará o centro do circulo encontrado e o seu raio /// método de detecção utilizado - geralmente é o CV_HOUGH_GRADIENT, fator de escala de resolução se 1 mantem a escala da resolução
         do acumulador / se 2 os contornos serão buscado em metada da resolução da original /// Distância mínima entre os centros dos círculos detectados. 
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
         cvtColor(gauss_image, imgHSV, CV_RGB2HSV);
         inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), binary_image);
 
-        cout << "\n\n-> Informacoes circulos " << endl;
+        cout << "\n\nInformacoes circulos " << endl;
 
         for (size_t i = 0; i < ord_circles.size(); i++)
         {
@@ -130,19 +130,19 @@ int main(int argc, char **argv)
                     }
                 }
             }
-            lum_circulos[i] = found_pixels;
-            cout << "Luminosidade " << lum_circulos[i] << endl;
+            luminosidade_circ[i] = found_pixels;
+            cout << "Luminosidade " << luminosidade_circ[i] << endl;
         }
 
-        cout << "   -> Informacoes do painel " << endl;
+        cout << "\n\nInformacoes do painel " << endl;
         for (int i = 0; i < 3; i++)
         {
-            if (lum_circulos[i] < lum_circulos[i+3])
-                leitura_painel[i] = 1;
+            if (luminosidade_circ[i] < luminosidade_circ[i+3])
+                painel[i] = 1;
             else
-                leitura_painel[i] = 0;
+                painel[i] = 0;
 
-            if (leitura_painel[i] == 1)
+            if (painel[i] == 1)
             {
                 cout << "        - LIGADO" << endl;
             }
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
         imshow("Circulos Detectados", imgCircles);
     }
     //else if (circles.size() >= 4)
-    //    upper_threshold--;
+    //    max_threshold--;
 
     imshow("Imagem Original", src);
     imshow("Imagem GrayScale", imgGray);
@@ -178,7 +178,7 @@ void Ordena_Circulos(vector<Vec3f> &circles, vector<Vec3f> &ord_circles)
         y_med += circles[i][1];
     }
     raio_medio = raio_medio / circles.size();
-    cout << "\n\n-> Raio medio: " << raio_medio << " \nIntervalo de confiança: (" << (1 - raio_range) * raio_medio << "," << (1 + raio_range) * raio_medio << ") " << endl;
+    cout << "\n\nRaio medio: " << raio_medio << " \nIntervalo de confiança: (" << (1 - raio_range) * raio_medio << "," << (1 + raio_range) * raio_medio << ") " << endl;
 
     y_med = y_med / circles.size();
 
@@ -199,7 +199,7 @@ void Ordena_Circulos(vector<Vec3f> &circles, vector<Vec3f> &ord_circles)
         }
     }
 
-    while (cont_sup < sup_circles.size() /*&& cont_inf < inf_circles.size()*/)
+    while (cont_sup < sup_circles.size() && cont_inf < inf_circles.size())
     {
         for (int i = 0; i < sup_circles.size(); i++)
         {

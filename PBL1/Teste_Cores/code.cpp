@@ -57,11 +57,10 @@ int main(int argc, char **argv)
         {
             inRange(hsv_image, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded);
             imshow("Control", imgThresholded);
+            if(waitKey(30) == 27)
             break;
-            
         }
 
-        waitKey(0);
     //}
 
     return 0;
