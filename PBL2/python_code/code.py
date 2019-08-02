@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 import manipulations as mp
+import operator
+
+
 
 def main():
     video_name = '../road6.mp4'
@@ -16,6 +19,7 @@ def main():
     #cv2.namedWindow(result_window,cv2.WINDOW_NORMAL)
     #Contador de frames do video
     frame_counter = 0
+    side_ant = 0
     while(True):
         if cv2.waitKey(33) == 27:
             break
@@ -38,7 +42,31 @@ def main():
             bin_img = mp.select_Channel(bird_img)
             cv2.namedWindow("Channel Selection",cv2.WINDOW_NORMAL)
             cv2.imshow("Channel Selection",bin_img)
-            ponts_ini = mp.histogram_Line(bin_img)
+
+            pont_ini, hist_img = mp.histogram_Line(bin_img)
+            cv2.namedWindow("Histogram",cv2.WINDOW_NORMAL)
+            cv2.imshow("Histogram",hist_img)
+
+            sliding_img, vec_nav = mp.sliding_Window(bird_img, bin_img, pont_ini, 20)
+            #Ordenando meu vetor com os pontos calculado dos retangulos centrais
+            vec_nav.sort(key = operator.itemgetter(1),reverse = True)
+            
+            cv2.namedWindow("Sliding Window",cv2.WINDOW_NORMAL)
+            cv2.imshow("Sliding Window", sliding_img)
+
+            vec_nav_final = mp.inverse_bird_Eyes(frame,vec_nav)
+            if vec_nav_final is not None:
+                #Passando para 2 dimensoes meu vetor de navegacao
+                vec_nav_final = vec_nav_final[0,:,:]
+            
+            result_img, shift, side = mp.shift_Central(frame,vec_nav_final)
+            #Se tiver perdido o pontilhado passho shift igual a 0 e assim pego o side_anterior
+            if side == 0:
+                side = side_ant
+            print "---------------\nDeslocar: ",shift,"\nPosicao: ",side, "\n"
+            side_ant = side
+            cv2.namedWindow("Result Image",cv2.WINDOW_NORMAL)
+            cv2.imshow("Result Image", result_img)
         #Se nao eu printo o erro e para reproducao do video
         else:
             print "Erro ao ler frame !"
